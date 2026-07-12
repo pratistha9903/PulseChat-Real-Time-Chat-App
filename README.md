@@ -13,6 +13,11 @@ A full-stack, WhatsApp-style real-time chat application built with **React**, **
 > Open the live app, register an account, and use a second browser (incognito) to test real-time chat between two users.
 
 ---
+## Demo Video
+
+https://github.com/user-attachments/assets/235eb108-585c-401f-848d-7457a6bf661b
+
+---
 
 ## Table of Contents
 
