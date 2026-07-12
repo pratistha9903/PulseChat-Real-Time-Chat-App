@@ -1,98 +1,639 @@
-# PulseChat — Interview-Ready Real-Time Chat
+# PulseChat — Real-Time Chat Application
 
-Production-grade WhatsApp-style chat with **MongoDB**, **JWT auth**, **Socket.io**, private & group conversations, and live notifications.
+A full-stack, WhatsApp-style real-time chat application built with **React**, **Node.js**, **Express**, **Socket.io**, and **MongoDB**. Multiple users can connect at the same time, chat live, and see message history after refresh.
 
-## Level 1 Features (Interview Ready)
+**GitHub Repository:** [https://github.com/pratistha9903/chat_app](https://github.com/pratistha9903/chat_app)
+
+---
+
+## Table of Contents
+
+1. [Project Overview](#project-overview)
+2. [Features](#features)
+3. [Tech Stack](#tech-stack)
+4. [Project Structure](#project-structure)
+5. [Prerequisites](#prerequisites)
+6. [Project Setup](#project-setup)
+7. [Running the Backend](#running-the-backend)
+8. [Running the Frontend](#running-the-frontend)
+9. [Environment Variables](#environment-variables)
+10. [How to Use the Application](#how-to-use-the-application)
+11. [REST API Endpoints](#rest-api-endpoints)
+12. [Socket.io Events](#socketio-events)
+13. [Design Decisions](#design-decisions)
+14. [Assumptions](#assumptions)
+15. [Deployment (Render)](#deployment-render)
+16. [Submission Notes](#submission-notes)
+17. [Troubleshooting](#troubleshooting)
+18. [License](#license)
+
+---
+
+## Project Overview
+
+PulseChat is a real-time messaging platform where users can:
+
+- Register and log in securely
+- Start **private (1-to-1)** chats
+- Create **group chats** with multiple members
+- Send and receive messages **instantly** without page refresh
+- View **previous chat history** stored in MongoDB
+- See **online/offline status**, **typing indicators**, and **read/delivered receipts**
+
+The application follows the assignment requirement of using **Socket.io** for real-time communication (not polling or third-party realtime services).
+
+---
+
+## Features
+
+### Core Requirements (Assignment)
+
+| Feature | Status | Details |
+|---------|--------|---------|
+| React frontend | ✅ | React 18 + Vite |
+| Clean chat UI | ✅ | WhatsApp-style 3-panel layout |
+| Send messages | ✅ | Text + image support |
+| Receive messages instantly | ✅ | Socket.io real-time delivery |
+| Chat history after refresh | ✅ | Persisted in MongoDB |
+| Message timestamps | ✅ | Per message + date separators |
+| Node.js + Express backend | ✅ | REST + Socket.io server |
+| REST API: send messages | ✅ | `POST /api/messages/:roomId` |
+| REST API: fetch history | ✅ | `GET /api/messages/:roomId` |
+| Socket.io (mandatory) | ✅ | Primary real-time transport |
+| Broadcast to connected users | ✅ | Room-based socket broadcasting |
+| Graceful connect/disconnect | ✅ | Reconnect + room re-join |
+| Organized code structure | ✅ | Separate routes, models, sockets |
+| Error handling | ✅ | API + socket + UI toasts |
+
+### Bonus Features (Implemented)
 
 | Feature | Status |
 |---------|--------|
-| Real-time messaging (Socket.io) | ✅ |
-| JWT Authentication | ✅ |
-| User registration / login | ✅ |
-| MongoDB message storage | ✅ |
-| Previous chat history | ✅ |
-| Timestamps | ✅ |
-| Responsive UI | ✅ |
-| Online / Offline status | ✅ |
+| User authentication (JWT + bcrypt) | ✅ |
 | Typing indicator | ✅ |
-| Read receipts | ✅ |
-| Delivered status | ✅ |
-| Auto-scroll to latest message | ✅ |
-| Loading skeletons | ✅ |
-| Error handling | ✅ |
-| Input validation | ✅ |
-| Private chats (1-to-1) | ✅ |
+| Online / offline status | ✅ |
+| Message delivered status | ✅ |
+| Message read receipts | ✅ |
+| MongoDB storage | ✅ |
+| Private chats | ✅ |
 | Group chats | ✅ |
 | In-app + browser notifications | ✅ |
+| Image upload | ✅ |
+| Reply / edit / delete messages | ✅ |
+| Message search | ✅ |
+| Loading skeletons | ✅ |
+| Rate limiting & security headers | ✅ |
 
-## Quick Start
+---
 
-### 1. MongoDB
+## Tech Stack
 
-**Option A — Docker (recommended)**
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 18, Vite, Socket.io Client, Lucide Icons |
+| Backend | Node.js, Express, Socket.io |
+| Database | MongoDB (Mongoose ODM) |
+| Authentication | JWT + bcrypt |
+| File Upload | Multer |
+| Security | Helmet, express-rate-limit, CORS |
+
+---
+
+## Project Structure
+
+```
+realtime-chat-app/
+├── backend/
+│   ├── src/
+│   │   ├── db/
+│   │   │   ├── connect.js          # MongoDB connection
+│   │   │   └── services.js         # Database operations
+│   │   ├── middleware/
+│   │   │   ├── auth.js             # JWT auth (REST + Socket)
+│   │   │   ├── errorHandler.js
+│   │   │   └── rateLimiter.js
+│   │   ├── models/
+│   │   │   ├── User.js
+│   │   │   ├── Conversation.js     # Private & group chats
+│   │   │   └── Message.js
+│   │   ├── routes/
+│   │   │   ├── auth.js             # Register, login, me
+│   │   │   ├── rooms.js            # Conversations API
+│   │   │   ├── messages.js         # Messages API
+│   │   │   └── upload.js           # Image upload
+│   │   ├── sockets/
+│   │   │   ├── chatSocket.js       # Real-time events
+│   │   │   └── socketHelpers.js    # Broadcast helpers
+│   │   ├── utils/
+│   │   └── server.js               # App entry point
+│   ├── uploads/                    # Uploaded images
+│   ├── .env.example
+│   └── package.json
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── auth/               # Login / register screen
+│   │   │   ├── chat/               # Chat UI components
+│   │   │   └── ui/                 # Reusable UI (Avatar, Modal, Toast)
+│   │   ├── context/                # Auth, Toast, Notification state
+│   │   ├── hooks/
+│   │   │   └── useSocket.js        # Socket.io client hook
+│   │   ├── services/
+│   │   │   └── api.js              # REST API client
+│   │   └── App.jsx
+│   ├── .env.example
+│   └── package.json
+│
+├── docker-compose.yml              # Local MongoDB via Docker
+└── README.md
+```
+
+---
+
+## Prerequisites
+
+Before running the project, install:
+
+- **Node.js** v18 or higher — [https://nodejs.org](https://nodejs.org)
+- **npm** (comes with Node.js)
+- **MongoDB** — choose one:
+  - **MongoDB Atlas** (free cloud — recommended for deployment)
+  - **Docker** (local MongoDB)
+  - Or use the dev in-memory fallback (data resets on restart)
+
+---
+
+## Project Setup
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/pratistha9903/chat_app.git
+cd chat_app
+```
+
+### 2. Set up MongoDB
+
+**Option A — MongoDB Atlas (recommended for persistence & deployment)**
+
+1. Create a free cluster at [https://www.mongodb.com/atlas](https://www.mongodb.com/atlas)
+2. Create a database user and allow your IP in **Network Access**
+3. Copy the connection string and set it in `backend/.env`
+4. URL-encode special characters in the password (e.g. `@` → `%40`)
+
+**Option B — Docker (local)**
+
 ```bash
 docker compose up -d
 ```
 
-**Option B — MongoDB Atlas**
-Set `MONGODB_URI` in `backend/.env` to your Atlas connection string.
+Uses `mongodb://127.0.0.1:27017/pulsechat` by default.
 
-**Option C — Dev fallback**
-If local MongoDB isn't running, the backend auto-starts an in-memory MongoDB (data resets on restart).
+**Option C — Dev fallback (no setup)**
 
-### 2. Backend
+If local MongoDB is unavailable and you are **not** using Atlas, the backend starts an in-memory MongoDB automatically. Data is lost when the server restarts.
+
+### 3. Configure environment variables
+
+```bash
+# Backend
+cd backend
+cp .env.example .env
+# Edit .env with your values
+
+# Frontend
+cd ../frontend
+cp .env.example .env
+# Default values work for local development
+```
+
+### 4. Install dependencies
+
+```bash
+# From project root
+cd backend && npm install
+cd ../frontend && npm install
+```
+
+---
+
+## Running the Backend
+
 ```bash
 cd backend
-npm install
-cp .env.example .env
 npm run dev
 ```
 
-### 3. Frontend
+**Production:**
+
+```bash
+cd backend
+npm start
+```
+
+The server starts on **http://localhost:3001** by default.
+
+**Verify it is running:**
+
+```bash
+curl http://localhost:3001/api/health
+```
+
+Expected response:
+
+```json
+{
+  "success": true,
+  "message": "Server is running",
+  "database": {
+    "status": "connected",
+    "name": "pulsechat",
+    "type": "atlas"
+  }
+}
+```
+
+---
+
+## Running the Frontend
+
 ```bash
 cd frontend
-npm install
 npm run dev
 ```
 
-Open **http://localhost:5173**
+Open **http://localhost:5173** in your browser.
 
-## How to Use
+If port 5173 is busy, Vite may use **5174** — check the terminal output.
 
-1. **Register** two accounts (use incognito for the second)
-2. Click **+** (New Chat) to start a **private chat**
-3. Click **👥** to create a **group chat** with multiple members
-4. Messages show **sent → delivered → read** checkmarks
-5. **Notifications** appear when you receive messages in other conversations
-6. Allow browser notifications for desktop alerts
+**Build for production:**
 
-## Tech Stack
+```bash
+cd frontend
+npm run build
+npm run preview
+```
 
-- **Frontend:** React, Vite, Socket.io Client
-- **Backend:** Node.js, Express, Socket.io, Mongoose
-- **Database:** MongoDB
-- **Auth:** JWT + bcrypt
+---
 
 ## Environment Variables
 
+### Backend (`backend/.env`)
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `PORT` | No | Server port | `3001` |
+| `CLIENT_URL` | Yes | Frontend URL for CORS | `http://localhost:5173` |
+| `MONGODB_URI` | Yes | MongoDB connection string | `mongodb+srv://user:pass@cluster.mongodb.net/pulsechat` |
+| `JWT_SECRET` | Yes | Secret for signing JWT tokens | `your-long-random-secret` |
+| `JWT_EXPIRES_IN` | No | Token expiry | `7d` |
+| `UPLOAD_DIR` | No | Image upload folder | `./uploads` |
+| `MAX_FILE_SIZE` | No | Max upload size in bytes | `5242880` (5 MB) |
+
+**Example `backend/.env`:**
+
 ```env
-# backend/.env
 PORT=3001
 CLIENT_URL=http://localhost:5173
-MONGODB_URI=mongodb://127.0.0.1:27017/pulsechat
-JWT_SECRET=your-secret-here
+MONGODB_URI=mongodb+srv://<user>:<password>@cluster0.xxxxx.mongodb.net/pulsechat?retryWrites=true&w=majority
+JWT_SECRET=your-long-random-secret-here
+JWT_EXPIRES_IN=7d
+UPLOAD_DIR=./uploads
+MAX_FILE_SIZE=5242880
 ```
 
-## API Endpoints
+> **Important:** Never commit `.env` to GitHub. Use `.env.example` as a template only.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/register` | Create account |
-| POST | `/api/auth/login` | Sign in |
-| GET | `/api/rooms` | List conversations |
-| POST | `/api/rooms/dm/:userId` | Start private chat |
-| POST | `/api/rooms/group` | Create group chat |
-| GET | `/api/messages/:roomId` | Chat history |
+### Frontend (`frontend/.env`)
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `VITE_API_URL` | No | Backend REST API URL | `http://localhost:3001` |
+| `VITE_SOCKET_URL` | No | Socket.io server URL | `http://localhost:3001` |
+
+**Example `frontend/.env` (local):**
+
+```env
+VITE_API_URL=http://localhost:3001
+VITE_SOCKET_URL=http://localhost:3001
+```
+
+**After deploying backend to Render**, update frontend `.env`:
+
+```env
+VITE_API_URL=https://your-app.onrender.com
+VITE_SOCKET_URL=https://your-app.onrender.com
+```
+
+---
+
+## How to Use the Application
+
+### Single-user flow
+
+1. Open **http://localhost:5173**
+2. Click **Sign Up** (top-right) and create an account
+3. Sign in and explore the chat interface
+
+### Multi-user live chat (recommended demo)
+
+1. **Browser 1:** Register as `alice` / sign in
+2. **Browser 2 (incognito):** Register as `bob` / sign in
+3. **Alice:** Click **+** (New Chat) → select **Bob**
+4. **Alice:** Send a message
+5. **Bob:** The conversation appears in the sidebar → open it → message appears **live**
+6. **Bob:** Reply → Alice sees it instantly
+7. **Refresh either browser** → chat history is still there (MongoDB)
+
+### Group chat
+
+1. Click the **group icon** in the sidebar
+2. Enter a group name and select members
+3. All members receive the group and can chat in real time
+
+### Other features to demo
+
+- **Typing indicator** — start typing in an open chat
+- **Online status** — green dot on avatars when users are connected
+- **Read receipts** — checkmarks: sent → delivered → read
+- **Notifications** — receive a message in another conversation
+- **Image upload** — attach an image in the message input
+- **Sign out** — top-right button
+
+---
+
+## REST API Endpoints
+
+### Authentication
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `POST` | `/api/auth/register` | Create account | No |
+| `POST` | `/api/auth/login` | Sign in | No |
+| `GET` | `/api/auth/me` | Get current user | Yes |
+
+### Conversations (Rooms)
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `GET` | `/api/rooms` | List user's conversations | Yes |
+| `GET` | `/api/rooms/:roomId` | Get conversation details | Yes |
+| `GET` | `/api/rooms/:roomId/members` | List members | Yes |
+| `POST` | `/api/rooms/dm/:userId` | Start or get private chat | Yes |
+| `POST` | `/api/rooms/group` | Create group chat | Yes |
+| `GET` | `/api/rooms/users` | List all users | Yes |
+| `GET` | `/api/rooms/users/search?q=` | Search users | Yes |
+
+### Messages
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `GET` | `/api/messages/:roomId` | Fetch chat history | Yes |
+| `POST` | `/api/messages/:roomId` | Send message (REST) | Yes |
+| `PUT` | `/api/messages/:messageId` | Edit message | Yes |
+| `DELETE` | `/api/messages/:messageId` | Delete message | Yes |
+| `POST` | `/api/messages/:roomId/read` | Mark messages as read | Yes |
+| `GET` | `/api/messages/search?q=` | Search messages | Yes |
+
+### Other
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `POST` | `/api/upload` | Upload image | Yes |
+| `GET` | `/api/health` | Server & database health | No |
+
+> **Note:** The UI sends messages primarily via **Socket.io** for real-time delivery. REST `POST /api/messages` is also available.
+
+---
+
+## Socket.io Events
+
+### Client → Server
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `room:join` | `{ roomId }` | Join a conversation room |
+| `room:leave` | `{ roomId }` | Leave a conversation room |
+| `message:send` | `{ roomId, content, type?, imageUrl?, replyTo? }` | Send a message |
+| `message:edit` | `{ messageId, content }` | Edit own message |
+| `message:delete` | `{ messageId }` | Delete own message |
+| `message:read` | `{ roomId, messageId }` | Mark messages as read |
+| `typing:start` | `{ roomId }` | User started typing |
+| `typing:stop` | `{ roomId }` | User stopped typing |
+
+### Server → Client
+
+| Event | Description |
+|-------|-------------|
+| `connection:ready` | Socket connected; includes online users |
+| `message:new` | New message in a joined room |
+| `message:updated` | Message edited or deleted |
+| `message:status` | Delivery/read status update |
+| `message:read` | Messages marked as read |
+| `room:updated` | Conversation metadata updated |
+| `room:new` | New conversation added for user |
+| `users:online` | Online users list changed |
+| `typing:start` / `typing:stop` | Typing indicators |
+| `notification:new` | New message notification |
+| `error` | Socket-level error message |
+
+### Authentication
+
+Socket.io connections require a JWT token:
+
+```javascript
+io(url, { auth: { token: 'your-jwt-token' } })
+```
+
+---
+
+## Design Decisions
+
+### 1. React (Web) instead of React Native
+
+The assignment allows **React Native (preferred) or React**. React was chosen for faster web development, easier local testing in the browser, and no APK build toolchain. A screen recording is provided instead of an APK.
+
+### 2. Socket.io for real-time messaging
+
+Socket.io was chosen because the assignment **requires** it. It provides:
+
+- Instant bidirectional communication
+- Automatic reconnection
+- Room-based broadcasting for conversations
+- JWT authentication on the socket handshake
+
+Polling and third-party realtime services were intentionally not used.
+
+### 3. MongoDB for persistence
+
+MongoDB stores users, conversations, and messages. It fits the document model for chat (nested members, flexible message types) and works with **MongoDB Atlas** for free cloud hosting and deployment.
+
+### 4. JWT authentication
+
+JWT tokens secure both REST APIs and Socket.io connections. This is stateless, scales easily, and is standard for modern web apps. Passwords are hashed with **bcrypt** before storage.
+
+### 5. Conversation-based architecture (not one global chat)
+
+Instead of a single global chat room, the app uses **private** and **group** conversations (WhatsApp-style). Each conversation maps to a Socket.io room (`room:<conversationId>`), so messages only go to members.
+
+### 6. REST + Socket.io hybrid
+
+| Operation | Transport | Reason |
+|-----------|-----------|--------|
+| Login, register, fetch history | REST | Standard request/response |
+| Send/receive live messages | Socket.io | Real-time, no refresh |
+| Load chat on open | REST | Reliable history fetch |
+| Typing, online status | Socket.io | Low-latency ephemeral events |
+
+### 7. Auto-join socket rooms on connect
+
+When a user connects, the server joins their socket to **all** conversations they belong to. This ensures live message delivery and sidebar updates even when the user is viewing a different chat.
+
+### 8. Layered backend structure
+
+Code is split into **routes** (HTTP), **sockets** (real-time), **models** (schema), **services** (business logic), and **middleware** (auth, errors). This keeps the codebase maintainable and testable.
+
+---
+
+## Assumptions
+
+1. **Web-first application** — Users access the app through a modern browser (Chrome, Firefox, Edge). No mobile APK is provided.
+
+2. **Users must register before chatting** — There is no anonymous/guest mode. Each user needs an account.
+
+3. **Internet connection required** — Both REST and Socket.io need network access to the backend.
+
+4. **MongoDB is available** — For production and persistent data, a MongoDB Atlas URI is expected. Local dev can use Docker or the in-memory fallback.
+
+5. **Single backend instance** — Online user tracking and socket state are in-memory on one server. Horizontal scaling would require Redis adapter (out of scope).
+
+6. **Trusted clients** — The app is a portfolio/assignment project, not hardened for production abuse (no CAPTCHA, email verification, or token revocation).
+
+7. **CORS** — Backend allows `localhost` origins and the URL set in `CLIENT_URL`. For deployment, `CLIENT_URL` must match the deployed frontend URL.
+
+8. **Image uploads stored locally** — Uploaded images are saved in `backend/uploads/`. On Render, use persistent disk or cloud storage for production.
+
+9. **Two users demo** — Live chat is demonstrated with two browsers (normal + incognito) or two machines pointing at the same backend.
+
+10. **No end-to-end encryption** — Messages are stored in MongoDB in plain text (standard for this assignment scope).
+
+---
+
+## Deployment (Render)
+
+### Deploy backend on Render
+
+1. Push code to GitHub
+2. Go to [https://render.com](https://render.com) → **New Web Service**
+3. Connect repository `pratistha9903/chat_app`
+4. Configure:
+   - **Root Directory:** `backend`
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm start`
+   - **Instance Type:** Free
+
+5. Add environment variables:
+
+| Key | Value |
+|-----|-------|
+| `PORT` | `3001` (or leave Render default) |
+| `MONGODB_URI` | Your Atlas connection string |
+| `JWT_SECRET` | A long random secret |
+| `CLIENT_URL` | Your frontend URL (e.g. Vercel or `http://localhost:5173` for demo) |
+| `NODE_ENV` | `production` |
+
+6. Deploy and copy the live URL (e.g. `https://pulsechat-api.onrender.com`)
+
+7. Update `frontend/.env`:
+
+```env
+VITE_API_URL=https://pulsechat-api.onrender.com
+VITE_SOCKET_URL=https://pulsechat-api.onrender.com
+```
+
+8. Rebuild/restart frontend
+
+### Deploy frontend (optional — Vercel / Netlify)
+
+```bash
+cd frontend
+npm run build
+```
+
+Deploy the `frontend/dist` folder, or connect the repo to Vercel with root directory `frontend`.
+
+---
+
+## Submission Notes
+
+This project is submitted as a **React web application** (not React Native).
+
+| Deliverable | Status |
+|-------------|--------|
+| GitHub repository | [https://github.com/pratistha9903/chat_app](https://github.com/pratistha9903/chat_app) |
+| README with setup | This file |
+| APK | Not applicable (React web app) |
+| Screen recording | To be uploaded to Google Drive |
+| Live API (bonus) | Deploy backend on Render |
+
+### Suggested screen recording flow
+
+1. Show GitHub repo
+2. Start backend + frontend
+3. Register two users (incognito)
+4. Start private chat and send messages live
+5. Show typing indicator and online status
+6. Refresh page and show history persists
+7. (Optional) Show group chat and notifications
+
+---
+
+## Troubleshooting
+
+### `EADDRINUSE: port 3001 already in use`
+
+Another backend process is running. Stop it:
+
+```powershell
+# Windows PowerShell
+Get-NetTCPConnection -LocalPort 3001 | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+```
+
+### MongoDB connection failed
+
+- Check `MONGODB_URI` in `backend/.env`
+- URL-encode special characters in password (`@` → `%40`)
+- In Atlas: **Network Access** → allow your IP (or `0.0.0.0/0` for dev)
+- Verify cluster is running
+
+### Messages not appearing live
+
+- Confirm **Live** badge is green in chat header
+- Both users must be signed in
+- Open the same conversation on both sides
+- Check browser console for socket errors
+
+### CORS errors
+
+- Set `CLIENT_URL` in backend `.env` to match your frontend URL exactly
+- Restart backend after changing `.env`
+
+### Session expired on load
+
+- Token may be invalid; sign in again
+- Ensure `JWT_SECRET` has not changed between restarts
+
+### `git push` error: `src refspec main does not match any`
+
+Your local branch may be `master`. Rename and push:
+
+```bash
+git branch -M main
+git push -u origin main
+```
+
+---
 
 ## License
 
