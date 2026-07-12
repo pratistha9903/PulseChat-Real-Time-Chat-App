@@ -36,9 +36,8 @@ https://github.com/user-attachments/assets/235eb108-585c-401f-848d-7457a6bf661b
 13. [Design Decisions](#design-decisions)
 14. [Assumptions](#assumptions)
 15. [Deployment (Render)](#deployment-render)
-16. [Submission Notes](#submission-notes)
-17. [Troubleshooting](#troubleshooting)
-18. [License](#license)
+16. [Troubleshooting](#troubleshooting)
+17. [License](#license)
 
 ---
 
@@ -596,31 +595,6 @@ npm run build
 ```
 
 The production build is served from the `dist` folder on Render.
-
----
-
-## Submission Notes
-
-This project is submitted as a **React web application** (not React Native).
-
-| Deliverable | Status |
-|-------------|--------|
-| GitHub repository | [https://github.com/pratistha9903/chat_app](https://github.com/pratistha9903/chat_app) |
-| README with setup | This file |
-| **Live website (Render)** | [https://pulsechat-web.onrender.com](https://pulsechat-web.onrender.com) |
-| APK | Not applicable (React web app) |
-| Screen recording | To be uploaded to Google Drive |
-| Live API (bonus) | Backend deployed on Render |
-
-### Suggested screen recording flow
-
-1. Show GitHub repo
-2. Open live app: [https://pulsechat-web.onrender.com](https://pulsechat-web.onrender.com)
-3. Register two users (incognito)
-4. Start private chat and send messages live
-5. Show typing indicator and online status
-6. Refresh page and show history persists
-7. (Optional) Show group chat and notifications
 
 ---
 
