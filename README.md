@@ -2,7 +2,15 @@
 
 A full-stack, WhatsApp-style real-time chat application built with **React**, **Node.js**, **Express**, **Socket.io**, and **MongoDB**. Multiple users can connect at the same time, chat live, and see message history after refresh.
 
-**GitHub Repository:** [https://github.com/pratistha9903/chat_app](https://github.com/pratistha9903/chat_app)
+## Live Demo (Deployed on Render)
+
+| Resource | URL |
+|----------|-----|
+| **Live Application** | [https://pulsechat-web.onrender.com](https://pulsechat-web.onrender.com) |
+| **GitHub Repository** | [https://github.com/pratistha9903/chat_app](https://github.com/pratistha9903/chat_app) |
+| **Backend API (Render)** | Web Service — health check at `/api/health` on your Render backend URL |
+
+> Open the live app, register an account, and use a second browser (incognito) to test real-time chat between two users.
 
 ---
 
@@ -319,11 +327,17 @@ VITE_API_URL=http://localhost:3001
 VITE_SOCKET_URL=http://localhost:3001
 ```
 
-**After deploying backend to Render**, update frontend `.env`:
+**Production (Render)** — frontend is deployed at [https://pulsechat-web.onrender.com](https://pulsechat-web.onrender.com). Set these in the Render **Static Site** environment before build:
 
 ```env
-VITE_API_URL=https://your-app.onrender.com
-VITE_SOCKET_URL=https://your-app.onrender.com
+VITE_API_URL=https://<your-backend-service>.onrender.com
+VITE_SOCKET_URL=https://<your-backend-service>.onrender.com
+```
+
+On the backend Render service, set:
+
+```env
+CLIENT_URL=https://pulsechat-web.onrender.com
 ```
 
 ---
@@ -522,6 +536,16 @@ Code is split into **routes** (HTTP), **sockets** (real-time), **models** (schem
 
 ## Deployment (Render)
 
+### Deployed URLs
+
+| Service | Platform | URL | Status |
+|---------|----------|-----|--------|
+| Frontend (Static Site) | Render | [https://pulsechat-web.onrender.com](https://pulsechat-web.onrender.com) | ✅ Live |
+| Backend (Web Service) | Render | Your `pulsechat-api` (or similar) service URL | ✅ Deployed |
+| Database | MongoDB Atlas | `pulsechat` database | ✅ Connected |
+
+**Render dashboard:** [https://dashboard.render.com](https://dashboard.render.com)
+
 ### Deploy backend on Render
 
 1. Push code to GitHub
@@ -540,28 +564,33 @@ Code is split into **routes** (HTTP), **sockets** (real-time), **models** (schem
 | `PORT` | `3001` (or leave Render default) |
 | `MONGODB_URI` | Your Atlas connection string |
 | `JWT_SECRET` | A long random secret |
-| `CLIENT_URL` | Your frontend URL (e.g. Vercel or `http://localhost:5173` for demo) |
+| `CLIENT_URL` | `https://pulsechat-web.onrender.com` |
 | `NODE_ENV` | `production` |
 
-6. Deploy and copy the live URL (e.g. `https://pulsechat-api.onrender.com`)
+6. Deploy and copy the live backend URL (e.g. `https://pulsechat-api.onrender.com`)
 
-7. Update `frontend/.env`:
+7. Set frontend Render environment variables and redeploy:
 
 ```env
 VITE_API_URL=https://pulsechat-api.onrender.com
 VITE_SOCKET_URL=https://pulsechat-api.onrender.com
 ```
 
-8. Rebuild/restart frontend
+### Deploy frontend on Render (Static Site) — ✅ Done
 
-### Deploy frontend (optional — Vercel / Netlify)
+| Setting | Value |
+|---------|-------|
+| **Root Directory** | `frontend` |
+| **Build Command** | `npm install && npm run build` |
+| **Publish Directory** | `dist` |
+| **Live URL** | [https://pulsechat-web.onrender.com](https://pulsechat-web.onrender.com) |
 
 ```bash
 cd frontend
 npm run build
 ```
 
-Deploy the `frontend/dist` folder, or connect the repo to Vercel with root directory `frontend`.
+The production build is served from the `dist` folder on Render.
 
 ---
 
@@ -573,14 +602,15 @@ This project is submitted as a **React web application** (not React Native).
 |-------------|--------|
 | GitHub repository | [https://github.com/pratistha9903/chat_app](https://github.com/pratistha9903/chat_app) |
 | README with setup | This file |
+| **Live website (Render)** | [https://pulsechat-web.onrender.com](https://pulsechat-web.onrender.com) |
 | APK | Not applicable (React web app) |
 | Screen recording | To be uploaded to Google Drive |
-| Live API (bonus) | Deploy backend on Render |
+| Live API (bonus) | Backend deployed on Render |
 
 ### Suggested screen recording flow
 
 1. Show GitHub repo
-2. Start backend + frontend
+2. Open live app: [https://pulsechat-web.onrender.com](https://pulsechat-web.onrender.com)
 3. Register two users (incognito)
 4. Start private chat and send messages live
 5. Show typing indicator and online status
@@ -616,8 +646,8 @@ Get-NetTCPConnection -LocalPort 3001 | ForEach-Object { Stop-Process -Id $_.Owni
 
 ### CORS errors
 
-- Set `CLIENT_URL` in backend `.env` to match your frontend URL exactly
-- Restart backend after changing `.env`
+- Set `CLIENT_URL` on the Render backend to `https://pulsechat-web.onrender.com` (no trailing slash)
+- Redeploy backend after changing environment variables
 
 ### Session expired on load
 
